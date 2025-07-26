@@ -1,0 +1,200 @@
+version: '3.8'
+
+services:
+  # Redis for Celery broker and caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Main FastAPI application
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+      - "9090:9090"  # Metrics port
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MODEL_CACHE_DIR=/app/models
+      - UPLOAD_FOLDER=/tmp/uploads
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - DEVICE=cuda
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - ./models:/app/models
+      - ./uploads:/tmp/uploads
+      - ./logs:/var/log/idp
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Celery worker for text extraction
+  text_worker:
+    build: .
+    command: celery -A celery_tasks worker --loglevel=info --concurrency=2 --queues=text_queue --hostname=text_worker@%h
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MODEL_CACHE_DIR=/app/models
+      - DEVICE=cuda
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - ./models:/app/models
+      - ./uploads:/tmp/uploads
+      - ./logs:/var/log/idp
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Celery worker for table extraction
+  table_worker:
+    build: .
+    command: celery -A celery_tasks worker --loglevel=info --concurrency=1 --queues=table_queue --hostname=table_worker@%h
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MODEL_CACHE_DIR=/app/models
+      - DEVICE=cuda
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - ./models:/app/models
+      - ./uploads:/tmp/uploads
+      - ./logs:/var/log/idp
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Celery worker for checkbox detection
+  checkbox_worker:
+    build: .
+    command: celery -A celery_tasks worker --loglevel=info --concurrency=3 --queues=checkbox_queue --hostname=checkbox_worker@%h
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MODEL_CACHE_DIR=/app/models
+      - DEVICE=cuda
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - ./models:/app/models
+      - ./uploads:/tmp/uploads
+      - ./logs:/var/log/idp
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Celery worker for handwriting extraction
+  handwriting_worker:
+    build: .
+    command: celery -A celery_tasks worker --loglevel=info --concurrency=1 --queues=handwriting_queue --hostname=handwriting_worker@%h
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MODEL_CACHE_DIR=/app/models
+      - DEVICE=cuda
+      - NVIDIA_VISIBLE_DEVICES=all
+      - HANDWRITING_MODEL=Qwen/Qwen2-VL-7B-Instruct
+    volumes:
+      - ./models:/app/models
+      - ./uploads:/tmp/uploads
+      - ./logs:/var/log/idp
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Celery Beat for scheduled tasks (optional)
+  celery_beat:
+    build: .
+    command: celery -A celery_tasks beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - ./logs:/var/log/idp
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Flower for Celery monitoring (optional)
+  flower:
+    build: .
+    command: celery -A celery_tasks flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

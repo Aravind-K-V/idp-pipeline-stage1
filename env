@@ -1,0 +1,65 @@
+# Environment Configuration for IDP Pipeline
+
+# API Configuration
+DEBUG=false
+HOST=0.0.0.0
+PORT=8000
+SECRET_KEY=your-super-secret-key-change-in-production
+API_TITLE=IDP Pipeline API
+API_VERSION=1.0.0
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379/0
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+
+# Celery Configuration
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+
+# File Upload Configuration
+MAX_FILE_SIZE=52428800  # 50MB
+UPLOAD_FOLDER=/tmp/uploads
+
+# Processing Configuration
+MAX_PAGES=50
+DPI=150
+HIGH_DPI=300
+DEVICE=cuda
+
+# Model Configuration
+MODEL_CACHE_DIR=/app/models
+DONUT_MODEL=naver-clova-ix/donut-base-finetuned-cord-v2
+TABLE_DETECTOR_MODEL=microsoft/table-transformer-detection
+TABLE_STRUCTURE_MODEL=microsoft/table-transformer-structure-recognition
+CHECKBOX_MODEL=yolov8s
+HANDWRITING_MODEL=Qwen/Qwen2-VL-7B-Instruct
+
+# OCR Configuration
+OCR_ENGINE=paddleocr
+MIN_CONFIDENCE_THRESHOLD=0.8
+RETRY_THRESHOLD=0.6
+MAX_RETRIES=3
+
+# Checkbox Configuration
+CHECKBOX_CONFIDENCE_THRESHOLD=0.5
+
+# Handwriting Configuration
+HANDWRITING_MIN_PIXELS=200704  # 256*28*28
+
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_FORMAT=json
+
+# Rate Limiting
+RATE_LIMIT_REQUESTS=10
+RATE_LIMIT_PERIOD=60
+
+# Monitoring
+ENABLE_METRICS=true
+METRICS_PORT=9090
+
+# Security
+ALLOWED_HOSTS=["*"]
+CORS_ORIGINS=["*"]
