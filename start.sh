@@ -83,7 +83,7 @@ echo "✅ All checks passed!"
 # Start the application
 if [ "$1" = "api" ]; then
     echo "🌐 Starting FastAPI server..."
-    exec uvicorn fastapi_main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${WORKERS:-1}
+    exec uvicorn fastapi_main:app --host 0.0.0.0 --port ${PORT:-8080} --workers ${WORKERS:-1}
 elif [ "$1" = "worker" ]; then
     queue=${2:-default}
     echo "👷 Starting Celery worker for queue: $queue"

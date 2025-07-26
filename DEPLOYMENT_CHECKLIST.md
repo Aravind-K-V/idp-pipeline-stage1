@@ -7,7 +7,7 @@
 
 ## EC2 Instance Setup (g4dn.2xlarge)
 - [ ] Launch EC2 instance with Deep Learning AMI (Ubuntu 22.04)
-- [ ] Configure security groups (ports 8000, 5555, 22)
+- [ ] Configure security groups (ports 8080, 5555, 22)
 - [ ] SSH into the instance
 - [ ] Run: `./ec2_setup.sh` to install Docker and NVIDIA Docker
 
@@ -20,7 +20,7 @@
 - [ ] View logs: `docker-compose logs -f`
 
 ## Test Deployment
-- [ ] Health check: `curl http://localhost:8000/health`
+- [ ] Health check: `curl http://localhost:8080/health`
 - [ ] Upload test PDF via API
 - [ ] Monitor via Flower: `http://your-ec2-ip:5555`
 - [ ] Check processing results

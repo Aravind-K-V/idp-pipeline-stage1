@@ -19,7 +19,7 @@ services:
   api:
     build: .
     ports:
-      - "8000:8000"
+      - "8080:8080"
       - "9090:9090"  # Metrics port
     environment:
       - REDIS_URL=redis://redis:6379/0
@@ -46,7 +46,7 @@ services:
               count: 1
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -68,15 +68,15 @@ docker-compose logs -f api
 
 ```bash
 # Health check
-curl http://localhost:8000/health
+curl http://localhost:8080/health
 
 # Upload and process a PDF
-curl -X POST "http://localhost:8000/process" \
+curl -X POST "http://localhost:8080/process" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@your_document.pdf"
 
 # Check processing status
-curl http://localhost:8000/status/{document_id}
+curl http://localhost:8080/status/{document_id}
 ```
 
 ## 🔧 Configuration
@@ -146,7 +146,7 @@ docker-compose logs -f
    ```
 
 2. **Configure Security Groups**:
-   - Allow port 8000 (API) from your IP ranges
+   - Allow port 8080 (API) from your IP ranges
    - Allow port 5555 (Flower) from admin IPs only
    - Block all other ports
 
@@ -169,7 +169,7 @@ import time
 # Upload document
 with open('proposal.pdf', 'rb') as f:
     response = requests.post(
-        'http://your-ec2-ip:8000/process',
+        'http://your-ec2-ip:8080/process',
         files={'file': f}
     )
 
@@ -178,7 +178,7 @@ print(f"Document ID: {document_id}")
 
 # Check status
 while True:
-    status = requests.get(f'http://your-ec2-ip:8000/status/{document_id}')
+    status = requests.get(f'http://your-ec2-ip:8080/status/{document_id}')
     data = status.json()
 
     if data['status'] == 'completed':
@@ -199,13 +199,13 @@ while True:
 
 ```bash
 # Overall API health
-curl http://localhost:8000/health
+curl http://localhost:8080/health
 
 # Individual service health
-curl http://localhost:8000/health/text
-curl http://localhost:8000/health/table
-curl http://localhost:8000/health/checkbox
-curl http://localhost:8000/health/handwriting
+curl http://localhost:8080/health/text
+curl http://localhost:8080/health/table
+curl http://localhost:8080/health/checkbox
+curl http://localhost:8080/health/handwriting
 ```
 
 ## 🛠️ Troubleshooting
